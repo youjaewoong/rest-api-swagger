@@ -1,12 +1,11 @@
 package com.example.restfulwebservice.user;
 
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserDaoService {
@@ -15,9 +14,9 @@ public class UserDaoService {
     private static int usersCount = 3;
 
     static {
-        users.add(new User(1, "Kenneth", new Date(), "pass1", "701010-1111111"));
-        users.add(new User(2, "Alice", new Date(), "pass2", "801010-2222222"));
-        users.add(new User(3, "Elena", new Date(), "pass2", "901010-1111111"));
+        users.add(new User(1, "윤재웅", new Date(), "pass1", "701010-1111111"));
+        users.add(new User(2, "마예은", new Date(), "pass2", "801010-2222222"));
+        users.add(new User(3, "윤혁준", new Date(), "pass2", "901010-1111111"));
     }
 
     public List<User> findAll() {

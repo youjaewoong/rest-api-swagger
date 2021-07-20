@@ -9,3 +9,6 @@
 2. 게시물 관리 API
 * 전체 게시물 목록 조회: GET HTTP Method, http://localhost:8088/users/{id}/posts
 * 게시물 삭제: DELETE HTTP Method, http://localhost:8088/users/{id}/posts/{post_id}
+
+swagger
+http://localhost:8088/swagger-ui.html

@@ -16,9 +16,11 @@ import java.util.Set;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+	//이름/URL/EMAIL
     private static final Contact DEFAULT_CONTACT = new Contact("Kenneth Lee",
             "http://www.joneconsulting.co.kr", "edowon@joneconsulting.co.kr");
 
+    //타이틀/설명/버전/서비스정보/회원정보/라이센스/라이센스주소
     private static final ApiInfo DEFAULT_API_INFO = new ApiInfo("Awesome API Title",
             "My User management REST API service", "1.0", "urn:tos",
             DEFAULT_CONTACT, "Apache 2.0",
