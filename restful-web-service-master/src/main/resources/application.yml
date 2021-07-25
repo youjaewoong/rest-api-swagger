@@ -14,7 +14,12 @@ spring:
     user:
       name: username
       password: passw0rd
-
+  mail:
+    host: smtp.naver.com
+    port: 587
+    username: n_nv711@naver.com
+    password: 
+    
 management:
   endpoints:
     web:
