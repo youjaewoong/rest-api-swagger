@@ -1,16 +1,12 @@
 package com.example.restfulwebservice.email;
 
 import java.util.Map;
-
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 public interface EmailTemplateStrategy {
 	
-	public String templateBindig(EmailTemplateRequest emailTemplateRequest, TemplateEngine templateEngine);
+	public String templateBindig(Map<String, Object> emailTemplateRequest, TemplateEngine templateEngine);
 	
 	final String FOLD_NAME = "email";
 	String TYPE_KO = "Ko";
@@ -20,44 +16,42 @@ public interface EmailTemplateStrategy {
 	 * @param emailTemplateRequest
 	 * @return
 	 */
-	default Context templateContext(EmailTemplateRequest emailTemplateRequest) {
+	default Context templateContext(Map<String, Object> emailTemplateRequest) {
 		Context context = new Context();
-		@SuppressWarnings("unchecked")
-		Map<String,Object> map = new ObjectMapper().convertValue(emailTemplateRequest, Map.class);
-	    context.setVariables(map);
+	    context.setVariables(emailTemplateRequest);
 		return context;
 	}
 	
 	/**
 	 * class 이름을 template명으로 변경한다.
-	 * @param multilingual 
+	 * @param object
 	 * @return
 	 */
-	default String templatePath(String multilingual) {
-		if(multilingual == null) multilingual = TYPE_KO;
+	default String templatePath(Object object) {
+		if(object == null) object = TYPE_KO;
 		
 		String path = this.getClass().getSimpleName().toLowerCase();
-		return FOLD_NAME + "/" + path+multilingual;
+		return FOLD_NAME + "/" + path+object;
 	}
 }
 
 class Template01 implements EmailTemplateStrategy{
-	public String templateBindig(EmailTemplateRequest emailTemplateRequest, TemplateEngine templateEngine) {
-		return templateEngine.process(templatePath(emailTemplateRequest.getMultilingual()),templateContext(emailTemplateRequest));
+	public String templateBindig(Map<String, Object> emailTemplateRequest, TemplateEngine templateEngine) {
+		return templateEngine.process(templatePath(emailTemplateRequest.getOrDefault("multilingual", TYPE_KO)),templateContext(emailTemplateRequest));
 	}
 }
 class Template02 implements EmailTemplateStrategy{
-	public String templateBindig(EmailTemplateRequest emailTemplateRequest, TemplateEngine templateEngine) {
-		return templateEngine.process(templatePath(emailTemplateRequest.getMultilingual()),templateContext(emailTemplateRequest));
+	public String templateBindig(Map<String, Object> emailTemplateRequest, TemplateEngine templateEngine) {
+		return templateEngine.process(templatePath(emailTemplateRequest.getOrDefault("multilingual", TYPE_KO)),templateContext(emailTemplateRequest));
 	}
 }
 class Template03 implements EmailTemplateStrategy{
-	public String templateBindig(EmailTemplateRequest emailTemplateRequest, TemplateEngine templateEngine) {
-		return templateEngine.process(templatePath(emailTemplateRequest.getMultilingual()),templateContext(emailTemplateRequest));
+	public String templateBindig(Map<String, Object> emailTemplateRequest, TemplateEngine templateEngine) {
+		return templateEngine.process(templatePath(emailTemplateRequest.getOrDefault("multilingual", TYPE_KO)),templateContext(emailTemplateRequest));
 	}
 }
 class Template04 implements EmailTemplateStrategy{
-	public String templateBindig(EmailTemplateRequest emailTemplateRequest, TemplateEngine templateEngine) {
-		return templateEngine.process(templatePath(emailTemplateRequest.getMultilingual()),templateContext(emailTemplateRequest));
+	public String templateBindig(Map<String, Object> emailTemplateRequest, TemplateEngine templateEngine) {
+		return templateEngine.process(templatePath(emailTemplateRequest.getOrDefault("multilingual", TYPE_KO)),templateContext(emailTemplateRequest));
 	}
 }
