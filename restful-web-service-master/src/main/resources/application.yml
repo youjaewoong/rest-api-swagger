@@ -19,7 +19,9 @@ spring:
     port: 587
     username: n_nv711@naver.com
     password: 
-    
+  mvc: 
+    view:
+      suffix: .html
 management:
   endpoints:
     web:
