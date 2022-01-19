@@ -1,0 +1,52 @@
+{
+  "ID": 123,
+  "NAME": "Jovan Lee",
+  "EMAIL": "jovan@example.com",
+  "PHONE": "+49 176 14890478",
+  "AGE": 32,
+  "PROJECTS": [
+    "Remote Job Board",
+    "Data Migration"
+  ],
+  "ADDRESS": {
+    "STREET": "Yorckstr. 75",
+    "CITY": "Berlin",
+    "ZIP_CODE": 10965,
+    "COUNTRY": "Germany"
+  },
+  "PAYMENT_METHODS": [
+    "PayPal",
+    "Stripe"
+  ],
+  "PROFILE_INFO": {
+    "GENDER": "Male",
+    "MARRIED": "Yes",
+    "SOURCE": "LinkedIn"
+  },
+  "MEMBER_LIST": {
+    "TOTAL": 2,
+	"MEMBERS": [
+		{
+	      "NAME": "Molecule Man",
+	      "AGE": 29,
+	      "SECRETIDENTITY": "Jane Wilson",
+	      "POWERS": [
+	        "Radiation resistance",
+	        "Turning tiny",
+	        "Radiation blast"
+	      ]
+	    },
+	    {
+	      "NAME": "Madame Uppercut",
+	      "AGE": 39,
+	      "SECRETIDENTITY": "Jane Wilson",
+	      "POWERS": [
+	        "Million tonne punch",
+	        "Damage resistance",
+	        "Superhuman reflexes"
+	      ]
+	    }
+	 ]
+  },
+  "RESULT_CODE": null
+}
