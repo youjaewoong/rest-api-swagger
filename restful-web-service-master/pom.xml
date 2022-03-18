@@ -148,6 +148,18 @@
 		    <version>3.5.1</version>
 		</dependency>
 
+		<!-- ssl 관련 -->
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.fasterxml.jackson.dataformat</groupId>
+		    <artifactId>jackson-dataformat-cbor</artifactId>
+		</dependency>
+
+		
     </dependencies>
 
     <build>
