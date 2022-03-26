@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello Request Example</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/request/request.css" rel="stylesheet">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="/request/request.js"></script>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+    
+<div class="loading_screen">
+	<div class="loading_spinner_box"> 
+		<div class="loading_spinner">
+			<div></div>
+		</div>
+	</div>
+</div>
+<div id="main-content" class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="name">요청 테스트</label>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="conversation" class="table table-striped">
+                <thead>
+                <tr>
+                    <td>순번</td>
+                    <td>이름</td>
+                    <td>이메일</td>
+                </tr>
+                <tr>
+                    <td><input name="ids" type="checkbox" value="1"></td>
+                    <td>윤재웅</td>
+                    <td>gos1004@nate.com</td>
+                </tr>
+                <tr>
+                    <td><input name="ids" type="checkbox" value="2"></td>
+                    <td>홍길동</td>
+                    <td>gos1003@nate.com</td>
+                </tr>
+                <tr>
+                    <td><input name="ids" type="checkbox" value="3"></td>
+                    <td>유관순</td>
+                    <td>gos1002@nate.com</td>
+                </tr>
+                </thead>
+                <tbody id="greetings">
+                </tbody>
+            </table>
+        </div>
+    </div>
+	<div>
+		<button class="btn btn-primary" onclick="map();">Map</button>
+	    <button class="btn btn-secondary" onclick="listCheckString();">List체크</button>
+	    <button class="btn btn-secondary" onclick="listUser();">List객체</button>
+	    <button class="btn btn-secondary" onclick="listMap();">ListMap</button>
+	    <button class="btn btn-success" onclick="json();">json</button>
+	</div>
+</div>
+</body>
+</html>
