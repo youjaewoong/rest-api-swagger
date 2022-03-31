@@ -10,5 +10,9 @@
 * 전체 게시물 목록 조회: GET HTTP Method, http://localhost:8088/users/{id}/posts
 * 게시물 삭제: DELETE HTTP Method, http://localhost:8088/users/{id}/posts/{post_id}
 
-swagger
-http://localhost:8088/swagger-ui.html
+##swagger
+* http://localhost:8088/swagger-ui.html
+
+##vm args
+* -Dapp.home=D:/dev/money/restful-web-service-master/restful-web-service-master/app-home
+* -Dspring.profiles.active=local

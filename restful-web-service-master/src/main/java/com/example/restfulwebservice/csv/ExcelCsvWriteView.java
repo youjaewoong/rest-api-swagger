@@ -2,10 +2,10 @@ package com.example.restfulwebservice.csv;
 
 import java.util.List;
 import java.util.Map;
- 
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
- 
+
 import org.springframework.web.servlet.view.AbstractView;
 import org.supercsv.io.CsvMapWriter;
 import org.supercsv.io.ICsvMapWriter;
@@ -46,7 +46,8 @@ public class ExcelCsvWriteView extends AbstractView {
         String[] colnms = columnNames.split(",");
  
         // 엑셀 데이터
-        List<Map<String, Object>> excelDataList = (List<Map<String, Object>>) modelMap.get("excelDataList");
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> excelDataList = (List<Map<String, Object>>) modelMap.get("excelDataList");
  
         csvMapWriter.writeHeader(colnms);
  

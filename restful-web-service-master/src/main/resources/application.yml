@@ -1,10 +1,6 @@
 server:
   port: 8088
 
-logging:
-  level:
-    org.springframework: DEBUG
-
 spring:
   jpa:
     show-sql: true
@@ -22,8 +18,73 @@ spring:
   mvc: 
     view:
       suffix: .html
+  jackson:
+    serialization:
+      indent-output: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: rnfkehfl1
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 5
+      connection-timeout: 600000
+    initialization-mode: always
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+
+############################################################################
+# Log properties
+logging:
+  file:
+    name: ${app.home}/logs/web-master-service.log
+  config: "classpath:logback-spring.xml"
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level %X{MDC.REQUEST_ID} %-15logger{0} - %msg%n%rEx{full,
+                Java.lang.reflect.Method,
+                org.apache.catalina,
+                org.springframework.aop,
+                org.springframework.security,
+                org.springframework.transaction,
+                org.springframework.web,
+                org.springframework.test,
+                org.springframework.mock,
+                org.junit,
+                sun.reflect,
+                net.sf.cglib,
+                CGLIB,
+                java.lang.Thread,
+                java.util.concurrent,
+                org.apache.coyote,
+                org.apache.tomcat,
+                javax.servlet.http.HttpServlet
+                com.zaxxer.hikari.pool
+                }"
+    file: "%d{HH:mm:ss.SSS} %-5level %X{MDC.REQUEST_ID} %-15logger{0} - %msg%n"
+  logback:
+    rollingpolicy:
+      file-name-pattern: "${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz"
+      max-file-size: 100MB
+      max-history: 365
+
+
+############################################################################
+# Mybatis propperties
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
+  check-config-location: true
+  mapper-locations : classpath*:mapper/**/*.xml
+  # type-aliases-package: com.sds.cloud.platform.tag.model
+
+
+############################################################################
+# Pagehelper propperties
+pagehelper:
+  helperDialect: PostgreSQL
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql

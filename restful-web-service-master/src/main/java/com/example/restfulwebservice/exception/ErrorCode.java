@@ -1,10 +1,6 @@
 package com.example.restfulwebservice.exception;
 
-import java.util.List;
-
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 
 @Getter

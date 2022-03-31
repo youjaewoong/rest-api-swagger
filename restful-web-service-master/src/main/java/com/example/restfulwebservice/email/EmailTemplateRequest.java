@@ -4,10 +4,12 @@ import javax.validation.constraints.NotBlank;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @ApiModel(value = "이메일 템플릿 정보", description = "이름, 나이, 사업자번호, 다국어 Domain Class")
-@Data
+@Getter
+@Setter
 public class EmailTemplateRequest extends EmailRequest{
 	
 	@NotBlank(message = NAME_MESSAGE)

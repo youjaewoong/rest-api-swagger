@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+		<setting name="cacheEnabled" value="false"/>
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<setting name="multipleResultSetsEnabled" value="true"/>
+		<setting name="useColumnLabel" value="true"/>
+		<setting name="useGeneratedKeys" value="false"/>
+		<setting name="defaultExecutorType" value="SIMPLE"/>
+		<setting name="defaultStatementTimeout" value="100"/>
+		<setting name="safeRowBoundsEnabled" value="false"/>
+		
+		<!-- Enables automatic from classic database column names -->
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+		
+		<setting name="localCacheScope" value="SESSION"/>
+  		<setting name="jdbcTypeForNull" value="OTHER"/>
+  		<setting name="lazyLoadTriggerMethods" 
+  			value="equals,clone,hashCode,toString"/>
+  		<setting name="logImpl" value="SLF4J"/>
+  		
+  		<!-- Allow referencing statement parameters by their actual names declared
+  		    in the method signature. To use this feature, your project must be compiled
+  		    in Java 8 withe -parameters option. -->
+		<setting name="useActualParamName" value="true"/>
+	</settings>
+</configuration>
