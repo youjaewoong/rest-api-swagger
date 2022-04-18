@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello Request Example</title>
+    <!-- link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" 
+    	integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" 
+    	crossorigin="anonymous"> -->
+    <link href="/builder/custom.css" rel="stylesheet">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+    <script
+	  src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
+	  integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30="
+	  crossorigin="anonymous"></script>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/2.2.1/json2html.min.js"></script>
+    <script src="/builder/builder.js"></script>
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta charset="utf-8">
+	<meta name="viewport" content="user-scalable=no, initial-scale=1,height=device-height,width=device-width,viewport-fit=cover">
+	<meta name="referrer" content="origin" />
+	<meta name="referrer" content="origin-when-cross-origin" />
+	<meta name="format-detection" content="telephone=no"/>
+	
+	<meta http-equiv="cache-control" content="max-age=0" />
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="expires" content="0" />
+	<meta http-equiv="pragma" content="no-cache" />
+	
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+    
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        
+    	// 초기설정(템플릿 종류-신청템플릿)
+    	$(":input:radio[name=formTmpl][value='TMPL_1000000002']").prop('checked', true);
+    	
+        // 목록 으로 가기
+        getBuilderFunc = function() {
+            document.frmBuilder.action = "/admin/builder/builder/getBuilderList.do";
+            document.frmBuilder.submit();
+        }
+        
+        // Step별 event 정의
+        $(document).on('click','.item_nav',function(){
+            
+            // Step index
+            var curr_id = $('ul#item_step').find('li.active').attr('data-tab_id');
+            
+            if(curr_id == 2) {
+                // 코드형 템플릿일 경우 데이터 필드 목록에서 REQUEST_ID와 REQUEST_SEQ 제거 
+                var formTmpl = $(":input:radio[name=formTmpl]:checked").val();
+                if(formTmpl == 'TMPL_1000000003' || formTmpl == 'TMPL_1000000004') {
+                    $('#attributeTable .basic_field_tr').each(function(index, e) { 
+                        var fieldName = $(e).find('#fieldId').val();
+                        if(fieldName != 'COMPANY_CODE') {
+                            $(e).remove();
+                        }
+                    });
+                }
+                
+                // 테이명 조합 후 dbTable 항목에 바인딩
+                generatorDbTableName();
+            } else if(curr_id == 3) {
+                // 데이터 필드 설정 후 아이템 Step 이동 시 data-filed selectbox 생성 및 아이템 목록 조회
+                createTableToSelectBoxFunc();
+                getItemListAllFunc();
+                
+                // 담당자 role 조합 후 권한 항목에 바인딩
+                $('#authorCode').val('V_ROLE_CHARGE_' + $('#bizCode').val());
+                $('#authorNm').val($('#serviceName').val() + ' 담당자');
+            }
+            
+            
+        });
+        
+        
+        // 모든 Step을 완료하고 최종 저장
+        onComplete = function() {
+            var form = document.frmBuilder;
+		       insertBuilderFunc(form);
+	    }
+        
+        
+        // Step5. 빌더 저장
+        insertBuilderFunc = function(form) { 
+        	// Create Service Role Setting
+        	var roleUserUseAt = $("input[name=roleUserUseAt]").is(":checked") ? "Y" : "N";
+        	$("#roleUserUseAt").val(roleUserUseAt);
+        	
+        	var roleSupportUseAt = $("input[name=roleSupportUseAt]").is(":checked") ? "Y" : "N";
+        	$("#roleSupportUseAt").val(roleSupportUseAt);
+        			
+        	
+            // Create Table Step 2 (필드설정)
+            var fieldToJsonData = createFieldToJsonData();
+            $('#fieldItems').val(JSON.stringify(fieldToJsonData));
+
+            // Item Step 3 (아이템설정)
+            var itemToJsonData = createItemToJsonData();           
+            $('#buildItems').val(JSON.stringify(itemToJsonData));
+
+            var editorJson = createEditorJsonData();
+            var builderJson = createJsonData();         
+            var builderHtml = settingHtmlFormatFunc(builderJson);
+
+            $('#originJson').val(editorJson);
+            $('#json').val(builderJson);
+            $('#html').val(tagReplaceAll(builderHtml));
+
+            var formTmplId = $(":input:radio[name=formTmpl]:checked").val();
+            $('#formTmplId').val(formTmplId);
+
+            // Button Permission Step 4 (권한 및 상세설정)
+            var permission = createPermissionToJsonData();            
+            $('#permission').val(JSON.stringify(permission));
+
+            var role = createRoleToJsonData();
+            $('#roleCharge').val(role);
+
+            var formData = $(form).serialize();
+            var statusCode = 'OK';
+            // Insert Service Step 1 (기본환경설정)
+            $.ajax({
+                method: "POST",  
+                dataType: "json",
+                async : false,
+                url: "/admin/builder/builder/setSvcInfoForBuilder.do", 
+                data: formData, 
+                success: function(response) {
+                    statusCode = response.CODE;
+                    $('.step_result_box').append("<div class='step_result'><i class='far fa-check-circle'></i>" + response.MESSAGE + "</div>");
+                }, 
+                error: function(a) {  
+                    statusCode = '';
+                }
+            });
+
+            if(statusCode == 'OK') {
+                // Create Biz Table Step 2 (필드설정)            
+                $.ajax({
+                    method: "POST",  
+                    dataType: "json",
+                    async : false,
+                    url: "/admin/builder/builder/setBizTableForBuilder.do", 
+                    data: formData, 
+                    success: function(response) {
+                        statusCode = response.CODE;
+                        $('.step_result_box').append("<div class='step_result'><i class='far fa-check-circle'></i>" + response.MESSAGE + "</div>");
+                    }, 
+                    error: function(a) {        
+                        statusCode = '';
+                    }
+                });
+            }
+            
+            if(statusCode == 'OK') {
+                // Create Builder Step 3 (아이템 설정) 
+                $.ajax({
+                    method: "POST",  
+                    dataType: "json",
+                    async : false,
+                    url: "/admin/builder/builder/setItemForBuilder.do", 
+                    data: formData, 
+                    success: function(response) {
+                        $('.step_result_box').append("<div class='step_result'><i class='far fa-check-circle'></i>" + response.MESSAGE + "</div>");
+                    }, 
+                    error: function(a) {        
+                        statusCode = '';
+                    }
+                });
+            }
+            
+            if(statusCode == 'OK') {
+                // Set Button Permission Step 4 (권한 설정) 
+                $.ajax({
+                    method: "POST",  
+                    dataType: "json",
+                    async : false,
+                    url: "/admin/builder/builder/setPermissionForBuilder.do", 
+                    data: formData, 
+                    success: function(response) {
+                        $('.step_result_box').append("<div class='step_result'><i class='far fa-check-circle'></i>" + response.MESSAGE + "</div>");
+                    }, 
+                    error: function(a) {  
+                        statusCode = '';                  
+                    }
+                });
+            }
+            
+            if(statusCode == 'OK') {
+                // Set Button Permission Step 5 (프로그램 생성) 
+                var formTmpl = $(":input:radio[name=formTmpl]:checked").val();
+                // 결재형 템플릿, 코드형 템플릿일 경우에만 프로그램 생성
+            	var serviceTypeCode = $("#serviceTypeCode option:selected").val();
+            	if(serviceTypeCode == 'BUILDER') {
+                    var tmpUrl = '/serviceCodeForm.do?serviceId=' + $("#serviceId").val();
+            		$.ajax({
+                        method: "POST", 
+                        url: "/admin/sym/prm/setProgrm.do", 
+                        dataType: "json",
+                        data: {
+                            "companyCode": $("#companyCode option:selected").val(),
+                            "useAt": 'Y',
+                            "progrmFileNm": $("#serviceName").val(),
+                            "progrmStrePath": '/',
+                            "progrmKoreanNm": $("#serviceName").val(),
+                            "url": tmpUrl   
+                        }, 
+                        success: function(response) {
+                            if(response.returnCnt > 0) {
+                                $('.step_result_box').append("<div class='step_result'><i class='far fa-check-circle'></i>프로그램 등록이 완료되었습니다.</div>");                                
+                            } else {
+                                $('.step_result_box').append("<div class='step_result'><i class='far fa-check-circle'></i>프로그램 등록에 실패하였습니다.</div>");
+                            }
+                        }, 
+                        error: function(a) {
+                        }
+                    }); 
+            	}
+            }
+        }
+    });
+</script>
+
+</head>
+<body>
+
+
+<div class="wrapper sub_page">
+    <div class="wrapper">
+        <div class="container">
+            <div class="sub_box">
+                <form id="frmBuilder" name="frmBuilder" method="post" onsubmit="return false;">
+                <input type="hidden" id="formId" name="formId" value="fromId123">
+                <input type="hidden" id="serviceId" name="serviceId" value="serviceId12">
+                <input type="hidden" id="html" name="html" value="">
+                <input type="hidden" id="json" name="json" value="">
+                <input type="hidden" id="dbTable" name="dbTable" value="">
+                <input type="hidden" id="originJson" name="originJson" value="">
+                <input type="hidden" id="fieldItems" name="fieldItems" value="">
+                <input type="hidden" id="buildItems" name="buildItems" value="">
+                <input type="hidden" id="formTmplId" name="formTmplId" value="">
+                <input type="hidden" id="permission" name="permission" value="">
+                <input type='hidden' name='roleCharge' id='roleCharge'>
+                
+                <div class="tab_box">
+                    <ul class="item_builder_tabs">
+                        <li class="active" data-tab="ci_tab-1">BUILDER</li>
+                        <li data-tab="ci_tab-2">JAVASCRIPT</li>
+                    </ul>
+                </div>
+                              
+                <div id="ci_tab-1" class="item_builder_content active">
+                    <div class="row">
+                        <div class="item_step_box">
+                            <ul class="item_step" id="item_step">
+                                <li class="active step_tab" data-tab_id="1">
+                                    <i class="fas fa-cogs"></i>
+                                    <div class='item_step_txt'>STEP1</div>
+                                </li>
+                                <li class="step_tab" data-tab_id="2">
+                                    <i class="fas fa-database"></i>
+                                    <div class='item_step_txt'>STEP2</div>
+                                </li>
+                                <li class="step_tab" data-tab_id="3">
+                                    <i class="fas fa-table"></i>
+                                    <div class='item_step_txt'>STEP3</div>
+                                </li>
+                                <li class="step_tab" data-tab_id="4">
+                                    <i class="fas fa-key"></i>
+                                    <div class='item_step_txt'>STEP4</div>
+                                </li>
+                                <li class="step_tab" data-tab_id="5">
+                                    <i class="fas fa-check"></i>
+                                    <div class='item_step_txt'>STEP5</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="item_arrow_btn_box">
+                            <button class="item_nav trans_btn" data-direction="prev">◀ 이전</button>
+                            <button class="item_nav trans_btn" data-direction="next">다음 ▶</button>
+                        </div>
+                    </div>
+                
+                    <!-- Step #1 -->
+                    <div class='step_content active' data-tab_content_id="1">
+                        <div class="sub_header">
+                            <h3>기본환경</h3>
+                        </div>
+                        <hr>
+                        <div class="sub_body admin_row">
+                            
+                            <div class="row">
+                                <div class="form_box">
+                                    <div class="form_content m_scroll no_line">
+                                        <div class="row form">
+                                            <div class="input_box col-2">
+                                                <label for="">회사명</label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="companyCode" name="companyCode">
+                                                            <option value="H101">IAMS</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-2">
+                                                <label for=""><spring:message code="hbsl.common.label.useat"/></label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="useAt" name="useAt">
+                                                        <option value="Y">사용</option>
+                                                        <option value="N">미사용</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sub_header">
+                                <h2>서비스 정보</h2>
+                                <hr>
+                            </div>
+                            <div class="row">
+                                <div class="form_box">
+                                    <div class="form_content m_scroll no_line">
+                                        <div class="row form">
+                                            <div class="input_box col-3">
+                                                <label for="">업무코드 *</label>
+                                                <div class="input_content">
+                                                    <input type="text" id="bizCode" name="bizCode" value="h301" label="업무코드" required>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-3">
+                                                <label for="">서비스명 *</label>
+                                                <div class="input_content">
+                                                    <input type="text" id="serviceName" name="serviceName" value="테스트_서비스명" label="서비스명" required>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-3">
+                                                <label for="">서비스타이틀 *</label>
+                                                <div class="input_content">
+                                                    <input type="text" id="serviceDisplayName" name="serviceDisplayName" value="테스트_서비스_타이틀" label="서비스타이틀" required>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-3">
+                                                <label for="">서비스타이틀(영) *</label>
+                                                <div class="input_content">
+                                                    <input type="text" id="serviceDisplayNameEng" name="serviceDisplayNameEng" value="test_service_title" label="서비스 타이틀(영)" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="form_box">
+                                    <div class="form_content m_scroll no_line">
+                                        <div class="row form">
+                                            <div class="input_box col-3">
+                                                <label for=""><spring:message code="hbsl.admin.title.mngt.builder.service.type"/> *</label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="serviceTypeCode" name="serviceTypeCode">
+                                                        <option value="BUILDER">빌더화면</option>                                                                        
+                                                        <option value="GENERAL">일반화면</option>    
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-9">
+                                                <label for="">URL *</label>
+                                                <div class="input_content">
+                                                    <input type="text" id="serviceUrl" name="serviceUrl" label="" required value="Http://">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="sub_header">
+                                <h2><spring:message code="hbsl.admin.title.mngt.builder.service.env"/></h2>
+                            </div>
+                            <div class="row">
+                                <div class="form_box">
+                                    <div class="form_content m_scroll no_line">
+                                        <div class="row form">
+                                            <div class="input_box col-4">
+                                                <label for="">테이블명 *</label>
+                                                <div class="input_content">
+                                                    <input type="text" id="preDbTable" name="preDbTable" style="text-align:center;" value="h301" readOnly>_
+                                                    <input type="text" id="midDbTable" name="midDbTable" style="text-align:center;" value="TEST" readOnly>_
+                                                    <input type="text" id="postDbTable" name="postDbTable" style="text-align:center;" value="h301" required>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-2">
+                                                <label for="">동의서 사용여부</label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="agreeUseAt" name="agreeUseAt">
+                                                        <option value="N">미사용</option>                                                                  
+                                                        <option value="Y">사용</option>  
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-2">
+                                                <label for="">안내박스 사용여부</label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="guideBoxUseAt" name="guideBoxUseAt">
+                                                        <option value="N">미사용</option>                                                                  
+                                                        <option value="Y">사용</option>   
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-2">
+                                                <label for="">안내박스 사용여부</label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="retirerSepratAt" name="retirerSepratAt">
+                                                        <option value="N">미사용</option>                                                                  
+                                                        <option value="Y">사용</option>  
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="input_box col-2">
+                                                <label for="">문서보존연한</label>
+                                                <div class="input_content">
+                                                    <select class="select_option" id="docExpireYear" name="docExpireYear">
+                                                            <option value="8">8년</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sub_header">
+                                <h2><spring:message code="hbsl.admin.title.mngt.builder.template"/></h2>
+                            </div>
+                            <div class="row">
+                                <div class="form_box">
+                                    <div class="radio_img_box">
+                                        <div class="radio_label">코드형템플릿</div>
+                                        <input type="radio" id="formTmpl_1" name="formTmpl" value="TMPL_1000000002">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class='step_content' data-tab_content_id="2">
+                        <div class="sub_header">
+                            <h3>데이터 필드</h3>
+                        </div>
+                        <hr>
+                        <div class="sub_body">
+                            <div class="row no_bg">
+                                <div class="btn_box_block_right">
+                                    <button class="trans_btn" onClick="javascript:showFieldItem();" id="fieldShowBtn">공통필드보기</button>
+                                    <button class="trans_btn" onClick="javascript:hideFieldItem();" id="fieldHideBtn" style="display:none;">공통필드숨기기</button>
+                                    <button class="trans_btn" onClick="javascript:addFieldItem();">행추가</button>
+                                </div>
+                            </div>  
+                            <div class="row no_bg item_field">
+                                <br>
+                                <table class="admin_list" id="attributeTable">
+                                    <thead>
+                                        <tr>
+                                            <th>필드명</th>
+                                            <th>필드ID</th>
+                                            <th>필드타입</th>
+                                            <th>필드길이</th>
+                                            <th>디폴트값</th>
+                                            <th>PK</th>
+                                            <th>Null</th>
+                                            <th>컬럼생성여부</th>
+                                            <th>정렬순서</th>
+                                            <th style="width:100px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fieldItemList">
+                                            <tr class="basic_field_tr" >
+                                                <td><input type="text" id="fieldName" name="fieldName" value="회사코드" readOnly/></td>
+                                                <td><input type="text" id="fieldId" name="fieldId" value="COMPANY_CODE" readOnly/></td>
+                                                <td><input type="text" id="fieldType" name="fieldType" value="VARCHAR" readOnly/></td>
+                                                <td><input type="text" id="fieldLength" name="fieldLength" value="50" readOnly/></td>
+                                                <td><input type="text" id="fieldDefault" name="fieldDefault" value="" readOnly/></td>
+                                                <td>
+                                                    <select class="select_option_mini" id="fieldPkAt" name="fieldPkAt">
+                                                        <option value="N" >Non PK</option>
+                                                        <option value="Y" >PK</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="select_option_mini" id="fieldNullableAt" name="fieldNullableAt">
+                                                        <option value="Y" selected> Null</option>
+                                                        <option value="N" selected> NotNull</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="select_option_mini" id="useAt" name="useAt" readonly>
+                                                        <option value="Y" >사용</option>
+                                                        <option value="N" >미사용</option>
+                                                    </select> 
+                                                </td>
+                                                <td><input type="text" id="sortOrder" name="sortOrder" value="0" /></td>
+                                                <td></td>
+                                            </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class='step_content' data-tab_content_id="3">
+                        <div class="sub_header">
+                            <h3>아이템 설정</h3>
+                        </div>
+                        <hr>
+                        <div class="row p_t_25">
+                            <div class="sub_body" id="sub_body">
+                                <div class="line_box blank_line_box">
+                                    <div class="line_head">
+                                        <div class="line_head_title">
+                                            <a href="#" class="new_line_box_btn">
+                                                <div class="icon_round plus"></div>
+                                                <span class="line_head_txt_box">일반 Item Box 추가하기</span>
+                                            </a><span class="gap"></span>
+                                            <a href="#" class="new_hidden_line_box_btn">
+                                                <div class="icon_round plus"></div>
+                                                <span class="line_head_txt_box">Hidden Item Box 추가하기</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- add item modal -->
+                    <div class="modal_box_items" id="items">
+                        <div class="modal" id="modal_create">
+                            <div class="modal_header">신규 아이템 리스트
+                            <span class="modal_close_items">&times;</span>
+                            </div>
+                            <div class="modal_body">
+                                <div class="input_box">
+                                    <div class="row no_pd">
+                                        <div class="input_content w100 input_mini">
+                                            <select class="select_option" id="searchcondition" name="searchcondition">
+          
+                                            </select>
+                                            <input type="text" id="searchkeyword" name="searchkeyword" placeholder="검색" onkeypress="if( event.keyCode==13 ){searchItemListFunc(); return false;}">
+                                            <a href="#" onClick="javascript:searchItemListFunc();"><i class="fas fa-search"></i></a>
+                                        </div>
+                                    </div>
+                                </div>              
+                                <div class="item_list_box scroll" id="templateByItems">
+                                    <!-- 아이템 목록이 보여지는 영역 -->                                    
+                                </div>      
+                                <input type="hidden" name="item_id" id="item_id" value="${new_item_id}">
+                                <input type="hidden" name="target" id="target_id" value="${target_id}">
+                                <input type="hidden" name="position" id="position" value="${position}">
+                            </div>
+                            <div class="modal_footer">
+                                <button class="btn_save">저장</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- edit attribute modal -->
+                    <div class="modal_box_attributes" id="attributes">
+                        <div class="modal" id="modal_edit">
+                            <div class="modal_header">속성정보 등록<span class="modal_close_attributes">&times;</span></div>
+                            <div class="modal_body">
+                                <div class="row">
+                                    <div class="col col-6">
+                                        <div class="input_box">
+                                            <label for="">ID</label>
+                                            <div class="input_content">
+                                                <input type="text" id="attrName" name="attrName" control="name">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col col-6">
+                                        <div class="input_box">
+                                            <label for="">LABEL</label>
+                                            <div class="input_content">
+                                                <input type="text" id="attrLabel" name="attrLabel" control="label">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col col-6">
+                                        <div class="input_box">
+                                            <label for="">PLACEHOLDER</label>
+                                            <div class="input_content">
+                                                <input type="text" id="attrPlaceHolder" name="attrPlaceHolder" control="placeholder">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col col-6">
+                                        <div class="input_box">
+                                            <label for="">MAX LENGTH</label>
+                                            <div class="input_content">
+                                                <input type="text" id="attrMaxLength" name="attrMaxLength" control="maxlength">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col col-12">
+                                        <div class="input_box">
+                                            <label for="">DATA FIELD</label>
+                                            <div class="input_content">
+                                                <select class="select_option" id="attrDataField" name="attrDataField" control="data-field">
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- div class="row">
+                                    <div class="col col-12">
+                                        <div class="input_box">
+                                            <label for="">EVENT</label>
+                                            <div class="input_content">
+                                                <select class="select_option" id="attrEvent" name="attrEvent" control="event">
+                                                    <option value="">선택하세요.</option>
+                                                    <option value="onclick">onclick</option>
+                                                    <option value="onchange">onchange</option>
+                                                    <option value="onkeypress">onkeypress</option>
+                                                    <option value="onkeydown">onkeydown</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col col-12">
+                                        <div class="input_box">
+                                            <div class="input_content">
+                                                <textarea class="attr_textarea" id="attrEventFunction" name="attrEventFunction" control="function"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div -->
+                            </div>
+                            <div class="modal_footer">
+                                <div class="row">
+                                    <div class="modal_checkbox_box">
+                                        <div class="col col-6">
+                                            <div class="checkbox_box checkbox_label_box">
+                                                <input type="checkbox" id="attrRequiredAt" name="attrRequiredAt" control="required">
+                                                <label for="attrRequiredAt">REQUIRED</label>
+                                            </div>
+                                        </div>
+                                        <div class="col col-6">
+                                            <div class="checkbox_box checkbox_label_box">
+                                                <input type="checkbox" id="attrInputAt" name="attrInputAt" control="input">
+                                                <label for="attrInputAt">INPUT</label>
+                                            </div>
+                                        </div>
+                                        <div class="col col-6">
+                                            <div class="checkbox_box checkbox_label_box">
+                                                <input type="checkbox" id="attrReadOnlyAt" name="attrReadOnlyAt" control="readonly">
+                                                <label for="attrReadOnlyAt">READ ONLY</label>
+                                            </div>
+                                        </div>
+                                        <div class="col col-6">
+                                            <div class="checkbox_box checkbox_label_box">
+                                                <input type="checkbox" id="attrSearchAt" name="attrSearchAt" control="search">
+                                                <label for="attrSearchAt">SEARCH</label>
+                                            </div>
+                                        </div>
+                                        <div class="col col-6">
+                                        	&nbsp;
+                                        </div>
+                                        <div class="col col-6">
+                                            <div class="input_box">
+	                                            <div class="input_content">
+	                                                <select class="select_option" id="attrSearchType" name="attrSearchType" control="searchtype" style="display:none;">
+	                                                    <option value="">없음</option>
+	                                                    <option value="from">FROM</option>
+	                                                    <option value="to">TO</option>
+	                                                </select>
+	                                            </div>
+	                                        </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <button class="btn_save">저장</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class='step_content'data-tab_content_id="4">
+                        <div class="sub_header">    
+                            <h3>권한/상세</h3>
+                        </div>
+                        <hr>
+                        <div class="sub_body">
+                            <div class="row no_bg">
+                               <div class="input_box col-3">
+                                    <table >
+                                        <thead>
+                                            <tr>
+                                                <th>사용자유형</th>
+                                                <th>버튼명</th>
+                                                <th>사용여부</th>
+                                            </tr>
+                                        </thead> 
+                                        <tbody id="V_ROLE_USER" class="permission">
+                                            <tr>
+                                                <td style="vertical-align: top; padding-top: 17px;" rowspan="1">
+                                                    일반사용자 <input type="hidden" name="roleName" id="roleName" value="V_ROLE_USER">
+                                                </td>                                                                      
+                                                <td>
+                                                   조회
+                                                </td>
+                                                <td>
+                                                    <label class="switch">
+                                                      <input type="checkbox" id="SEARCH">
+                                                      <span class="slider round"></span>
+                                                    </label>                                                                        
+                                                </td>                                                                        
+                                            </tr> 
+                                            <tr>
+                                                <td style="vertical-align: top; padding-top: 17px;" rowspan="2">
+                                                     <input type="hidden" name="roleName" id="roleName" value="V_ROLE_USER">
+                                                </td>                                                                      
+                                                <td>
+                                                   저장
+                                                </td>
+                                                <td>
+                                                    <label class="switch">
+                                                      <input type="checkbox" id="INSERT">
+                                                      <span class="slider round"></span>
+                                                    </label>                                                                        
+                                                </td>                                                                        
+                                            </tr> 
+                                        </tbody>
+                                    </table>
+                                </div>
+                               <div class="input_box col-3">
+                                    <table >
+                                        <thead>
+                                            <tr>
+                                                <th>사용자유형</th>
+                                                <th>버튼명</th>
+                                                <th>사용여부</th>
+                                            </tr>
+                                        </thead> 
+                                        <tbody id="V_ROLE_SUPPORT" class="permission">
+                                            <tr>
+                                                <td style="vertical-align: top; padding-top: 17px;" rowspan="1">
+                                                    일반사용자 <input type="hidden" name="roleName" id="roleName" value="V_ROLE_SUPPORT">
+                                                </td>                                                                      
+                                                <td>
+                                                   조회
+                                                </td>
+                                                <td>
+                                                    <label class="switch">
+                                                      <input type="checkbox" id="SEARCH">
+                                                      <span class="slider round"></span>
+                                                    </label>                                                                        
+                                                </td>                                                                        
+                                            </tr> 
+                                            <tr>
+                                                <td style="vertical-align: top; padding-top: 17px;" rowspan="2">
+                                                     <input type="hidden" name="roleName" id="roleName" value="V_ROLE_SUPPORT">
+                                                </td>                                                                      
+                                                <td>
+                                                   저장
+                                                </td>
+                                                <td>
+                                                    <label class="switch">
+                                                      <input type="checkbox" id="INSERT">
+                                                      <span class="slider round"></span>
+                                                    </label>                                                                        
+                                                </td>                                                                        
+                                            </tr> 
+                                        </tbody>
+                                    </table>
+                                </div>
+                               <div class="input_box col-3">
+                                    <table >
+                                        <thead>
+                                            <tr>
+                                                <th>사용자유형</th>
+                                                <th>버튼명</th>
+                                                <th>사용여부</th>
+                                            </tr>
+                                        </thead> 
+                                        <tbody id="V_ROLE_CHARGE" class="permission">
+                                            <tr>
+                                                <td style="vertical-align: top; padding-top: 17px;" rowspan="1">
+                                                    업무담당자 <input type="hidden" name="roleName" id="roleName" value="V_ROLE_CHARGE">
+                                                </td>                                                                      
+                                                <td>
+                                                   조회
+                                                </td>
+                                                <td>
+                                                    <label class="switch">
+                                                      <input type="checkbox" id="SEARCH">
+                                                      <span class="slider round"></span>
+                                                    </label>                                                                        
+                                                </td>                                                                        
+                                            </tr> 
+                                            <tr>
+                                                <td style="vertical-align: top; padding-top: 17px;" rowspan="2">
+                                                     <input type="hidden" name="roleName" id="roleName" value="V_ROLE_CHARGE">
+                                                </td>                                                                      
+                                                <td>
+                                                   저장
+                                                </td>
+                                                <td>
+                                                    <label class="switch">
+                                                      <input type="checkbox" id="INSERT">
+                                                      <span class="slider round"></span>
+                                                    </label>                                                                        
+                                                </td>                                                                        
+                                            </tr> 
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row no_bg add_manager">
+                                <table class="admin_list roleListTable">
+                                    <tr>
+                                        <th>일반사용자</th>
+                                        <td colspan="2">
+                                            <div class="input_box">
+                                                <div class="input_content">
+                                                    <input type="text" name='roleUser' id='roleUser' value="V_ROLE_USER" readonly>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="flex">
+                                        	<div class="checkbox_box">
+				                              <input type="checkbox" id="roleUserUseAt" name="roleUserUseAt">
+				                              <label for="roleUserUseAt">부서 사용자 검색</label>
+				                           </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>일반사용자</th>
+                                        <td colspan="2">
+                                            <div class="input_box">
+                                                <div class="input_content">
+                                                    <input type="text" name='roleSupport' id='roleSupport' value="V_ROLE_SUPPORT" readonly>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="flex">
+                                        	<div class="checkbox_box">
+				                              <input type="checkbox" id="roleSupportUseAt" name="roleSupportUseAt">
+				                              <label for="roleSupportUseAt">부서 사용자 검색</label>
+				                           </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>담당</th>
+                                        <td>
+                                            <div class="input_box">
+                                                <div class="input_content">
+                                                    <select class="select_option" id="roleCode" name="roleCode">
+                                                           <option value="ROLE_HA003_USER">[ROLE_HA003_USER}] 경조사담당자</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="ta_left">                                            
+                                            <button class="plus_btn" onclick="javascript:addRoleFunc();"> + </button>
+                                        </td>
+                                        <td id="roleList">
+                                            <div class="authorList">
+                                                <div class="authorBox">
+                                                    <input type='hidden' name='authorCode' id='authorCode'>
+                                                    <input type="text" name="authorNm" id="authorNm" readonly>
+                                                </div>
+                                            </div>
+                                        </td>
+                    
+                                    </tr>
+                                </table>
+                            </div>
+                    
+                    
+                        </div>
+                    </div>
+                    
+                    <div class='step_content'data-tab_content_id="5">
+                        <div class="sub_header">    
+                            <h3>진행사항</h3>
+                        </div>
+                        <div class="sub_body">
+                            <div class="row no_bg">
+                                <div class="step_result_box">
+                                </div>
+                            </div>
+                        </div>
+                    </div>                
+                </div>
+                <div id="ci_tab-2" class="item_builder_content">
+<textarea class="js_textarea native-scroll" id="jscript" name="jscript">
+$(document).ready(function () {
+
+});</textarea>
+                </div>
+            
+                
+            
+                </form>
+                <div class="hide-soft" id="html-output"></div> 
+                <div class="hide-soft" id="build-output"></div> 
+            </div>            
+        </div>
+    </div>
+</div>
+<script src="/builder/custom.js"></script>
+<script src="/builder/item_control.js"></script>
+<script id="data_field_form" type="text/html">
+<tr> 
+    <td> 
+        <input type='text' id='fieldName' name='fieldName' class='autocomplete' autocomplete='off'/> 
+    </td> 
+    <td> 
+        <input type='text' id='fieldId' name='fieldId'/> 
+    </td> 
+    <td> 
+    <select class="select_option_mini" id='fieldType' name='fieldType'> 
+        <option value='NVARCHAR'>NVARCHAR</option> 
+        <option value='VARCHAR'>VARCHAR</option> 
+        <option value='NUMBER'>NUMBER</option> 
+        <option value='CHAR'>CHAR</option> 
+        <option value='DATE'>DATE</option> 
+    </select>   
+    </td> 
+    <td> 
+        <input type='text' class='onlynumber' id='fieldLength' name='fieldLength' maxlength="4" required/> 
+    </td> 
+    <td> 
+        <input type='text' id='fieldDefault' name='fieldDefault'/> 
+    </td> 
+    <td> 
+        <select class="select_option_mini" id='fieldPkAt' name='fieldPkAt' style='height:25px;'> 
+            <option value='N'>Non PK</option> 
+            <option value='Y'>PK</option> 
+        </select>                                                
+    </td> 
+    <td> 
+        <select class="select_option_mini" id='fieldNullableAt' name='fieldNullableAt'> 
+            <option value='Y'>Null</option> 
+            <option value='N'>Not Null</option> 
+        </select>                                              
+    </td> 
+    <td> 
+        <select class="select_option_mini" id='useAt' name='useAt'> 
+            <option value='Y'>사용</option> 
+            <option value='N'>미사용</option> 
+        </select>                                                  
+    </td> 
+    <td> 
+        <input type='text' id='sortOrder' name='sortOrder' value='0' maxlength="2"/> 
+    </td> 
+    <td> 
+        <button class="trans_btn">행삭제</button> 
+    </td> 
+</tr> 
+</script>
+</body>
+
+</html>

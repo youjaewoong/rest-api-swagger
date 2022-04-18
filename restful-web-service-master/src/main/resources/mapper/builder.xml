@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.restfulwebservice.builder.dao.BuilderDao" >
+
+    <!-- 아이템 템플릿 목록 조회 -->
+    <select id="selectItemByTmpl" resultType="com.example.restfulwebservice.builder.vo.ItemVO">
+        SELECT /* Builder_SQL.selectItemByTmpl */
+               A.ITEM_ID AS itemId,
+               A.ITEM_TMPL_ID AS itemTmplId,
+               C.ITEM_TYPE AS itemType,
+               A.ITEM_NAME AS itemName,
+               A.HTML AS html,
+               A.JSON AS json,
+               A.USE_AT AS useAt    
+          FROM WM_ITEM A
+          LEFT OUTER JOIN WM_ITEM_TMPL C ON C.ITEM_TMPL_ID = A.ITEM_TMPL_ID
+         WHERE A.COMPANY_CODE = #{companyCode}
+           AND A.USE_AT = 'Y'
+        <if test="searchcondition != null and !searchcondition.equals('')">
+           AND A.ITEM_TMPL_ID = #{searchcondition}
+        </if>
+        <if test="searchkeyword != null and !searchkeyword.equals('')">
+           AND A.ITEM_NAME LIKE '%' || #{searchkeyword} || '%'
+        </if> 
+         ORDER BY A.ATTR_LABEL ASC
+    </select>
+    
+<!-- 폼빌더 기본환경 등록 -->
+    <insert id="insertService" >
+        INSERT /* Builder_SQL.insertService */
+        INTO WF_SERVICE
+        (
+            COMPANY_CODE,
+            SERVICE_ID,
+            BIZ_CODE,
+            SERVICE_NAME,
+            SERVICE_TYPE_CODE,
+            FORM_ID,
+            SERVICE_URL,
+            PRE_PROCESS_URL,
+            SERVICE_DISPLAY_NAME,
+            SERVICE_DISPLAY_NAME_ENG,
+            MOTO_NAME,
+            MOTO_POSITION,
+            CI_DISPLAY_AT,
+            CHARGE_APPROVAL_AT,
+            MANAGER_APPROVAL_AT,
+            APPROVAL_DECISION_CODE,
+            SIGN_DISPLAY_TYPE,
+            SIGN_SEND_COUNT,
+            SIGN_RECEIVE_COUNT,
+            PRINT_AT,
+            ACCEPT_MAIL_AT,
+            ACCEPT_MAIL_ADDRESS,
+            GUIDEBOX_CONTENTS,
+            NOTICE_POPUP_AT,
+            PRIVATEINFO_AGREEMENT_AT,
+            DB_HOST,
+            DB_SCHEMA,
+            DB_TABLE,
+            ROLE_CHARGE,
+            ROLE_SUPPORT,
+            USE_AT,
+            LIST_USE_AT,
+            DOC_EXPIRE_YEAR,
+            ROLE_USER_USE_AT,
+            ROLE_SUPPORT_USE_AT,
+            RETIRER_SEPRAT_AT,
+            LINK_SERVICE_ID,
+            CREATE_USER,
+            CREATE_TIME        
+        )
+        VALUES 
+        (
+            #{companyCode},
+            #{serviceId},
+            #{bizCode},
+            #{serviceName},
+            #{serviceTypeCode},
+            #{formId},
+            #{serviceUrl},
+            #{preProcessUrl},
+            #{serviceDisplayName},
+            #{serviceDisplayNameEng},
+            #{motoName},
+            #{motoPosition},
+            #{ciDisplayAt},
+            #{chargeApprovalAt},
+            #{managerApprovalAt},
+            #{approvalDecisionCode},
+            #{signDisplayType},
+            #{signSendCount},
+            #{signReceiveCount},
+            #{printAt},
+            #{acceptMailAt},
+            #{acceptMailAddress},
+            #{guideBoxContents},
+            #{noticePopupAt},
+            #{privateinfoAgreementAt},
+            #{dbHost},
+            #{dbSchema},
+            #{dbTable},
+            #{roleCharge},
+            #{roleSupport},
+            #{useAt},
+            #{listUseAt},
+            #{docExpireYear},
+            #{roleUserUseAt},
+            #{roleSupportUseAt},
+            #{retirerSepratAt},
+            #{linkServiceId},
+            #{createUser},
+            NOW()      
+        ) 
+    </insert>
+    
+    <!-- 업무 테이블 코멘트 생성 -->
+    <insert id="createBizTableComment" >
+        /* Builder_SQL.createBizTableComment */
+        ${query}
+    </insert>
+    
+    <!-- 업무 테이블 생성 -->
+    <insert id="createBizTable" >
+        /* Builder_SQL.createBizTable */
+        ${query}
+    </insert>
+    
+    <!-- 업무 테이블  Grant 생성 -->
+    <insert id="createBizTableGrant" >
+    	/* Builder_SQL.createBizTableGrant */
+        ${query}
+    </insert>
+    
+    <!-- 폼빌더 아이템 등록 -->
+    <insert id="insertFormItem" >
+        INSERT /* Builder_SQL.insertFormItem */
+        INTO WM_FORM_ITEM
+        (
+            COMPANY_CODE,
+            FORM_ID,
+            ITEM_ID,
+            ELEMENT_ID,
+            FIELD_ID,
+            EVENT_FUNCTION,
+            COLSPAN,
+            HTML,
+            JSON,
+            DISPLAY_AT,
+            USE_AT,
+            ATTR_LABEL,
+            ATTR_REQUIRED_AT,
+            ATTR_HELPTEXT,
+            ATTR_PLACEHOLDER,
+            ATTR_VALUE,
+            ATTR_OPTIONS,
+            ATTR_STYLE,
+            ATTR_TOGGLE_AT,
+            ATTR_INLINE_AT,
+            ATTR_ACCESS_AT,
+            ATTR_ACCESS_ID,
+            CREATE_USER,            
+            CREATE_TIME,
+            UPDATE_USER,
+            UPDATE_TIME
+        )
+        VALUES 
+        (
+            #{companyCode},
+            #{formId},
+            #{itemId},
+            #{elementId},
+            #{fieldId},
+            #{eventFunction},
+            0,
+            #{html},
+            #{json},
+            'Y',
+            'Y',
+            #{attrLabel},
+            #{attrRequiredAt},
+            #{attrHelpText},
+            #{attrPlaceHolder},
+            #{attrValue},
+            #{attrOptions},
+            #{attrStyle},
+            #{attrToggleAt},
+            #{attrInlineAt},
+            #{attrAccessAt},
+            #{attrAccessId},
+            #{createUser},
+            NOW(),
+            #{updateUser},
+            NOW()       
+        )         
+    </insert>    
+    
+    
+    <!-- 폼빌더 폼 정보 등록 -->
+    <insert id="insertForms" >
+        INSERT /* Builder_SQL.insertForms */
+        INTO WM_FORMS
+        (
+            COMPANY_CODE,
+            FORM_ID,
+            FORM_NAME,
+            FORM_DESC,
+            REVISION,
+            FORM_TMPL_ID,
+            LOCATED_PATH,
+            HTML,
+            JSON,
+            ORIGIN_JSON,
+            JSCRIPT,
+            CREATE_USER,
+            CREATE_TIME
+        )
+        VALUES 
+        (
+            #{companyCode},
+            #{formId},
+            #{formName},            
+            #{formDesc},
+            #{revision},
+            #{formTmplId},
+            #{locatedPath},
+            #{html},
+            #{json},
+            #{originJson},
+            #{jscript},
+            #{createUser},
+            NOW()
+        )     
+    </insert>    
+    
+        <!-- 버튼 목록 저장 -->
+    <insert id="insertWmFormButton" >
+        INSERT /* Builder_SQL.insertWmFormButton */
+        INTO WM_FORM_BUTTON
+        (
+            COMPANY_CODE,
+            FORM_ID,
+            ROLE_ID,
+            BUTTON_CODE,
+            USE_AT,
+            CREATE_USER,
+            CREATE_TIME
+        )
+        VALUES
+        (
+            #{companyCode},
+            #{formId},
+            #{roleId},
+            #{buttonCode},
+            #{useAt},
+            #{createUser},
+            NOW()
+        )    	
+    </insert>
+	
+	<!-- 폼빌더 데이터 필드 등록 -->
+    <insert id="insertFormField" >
+        INSERT /* Builder_SQL.insertFormField */
+        INTO WM_FORM_FIELD
+        (
+            COMPANY_CODE,
+            FORM_ID,
+            FIELD_ID,
+            FIELD_NAME,
+            FIELD_TYPE,
+            FIELD_LENGTH,
+            FIELD_DEFAULT,
+            FIELD_NULLABLE_AT,
+            FIELD_PK_AT,
+            FIELD_CAT,
+            USE_AT,
+            SORT_ORDER,
+            CREATE_USER,
+            CREATE_TIME
+                   
+        )
+        VALUES 
+        (
+            #{companyCode},
+            #{formId},
+            #{fieldId},
+            #{fieldName},
+            #{fieldType},
+            #{fieldLength},
+            #{fieldDefault},
+            #{fieldNullableAt},
+            #{fieldPkAt},
+            #{fieldCat},
+            #{useAt},
+            #{sortOrder},
+            #{createUser},
+            NOW()   
+        )           
+    </insert>
+</mapper>

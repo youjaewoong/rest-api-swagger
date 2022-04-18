@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.restfulwebservice.builder.dao.ServiceApprovalDao" >
+
+       <select id="selectServiceInfo" resultType="com.example.restfulwebservice.builder.vo.ServiceFormVO">
+		SELECT    /* ServiceApproval_SQL.selectServiceInfo */
+                A.COMPANY_CODE                as companyCode
+		        , A.SERVICE_ID                as serviceId
+		        , A.SERVICE_NAME              as serviceName
+		        , CASE WHEN #{languageCode} = 'en' THEN COALESCE(A.SERVICE_DISPLAY_NAME_ENG, A.SERVICE_DISPLAY_NAME) ELSE A.SERVICE_DISPLAY_NAME END AS serviceDisplayName
+				, A.BIZ_CODE                  as bizCode
+		        , A.CHARGE_APPROVAL_AT        as chargeApprovalAt
+				, A.MANAGER_APPROVAL_AT       as managerApprovalAt
+				, A.SIGN_DISPLAY_TYPE         as signDisplayType
+				, A.SIGN_SEND_COUNT           as signSendCount 
+				, A.SIGN_RECEIVE_COUNT        as signReceiveCount 
+				, A.PRINT_AT                  as printAt
+				, A.PERSONINFO_LIST           as personinfoList
+				, A.GUIDEBOX_CONTENTS         as guideBoxContents
+		        , A.DB_TABLE                  as dbTable
+		        , B.FORM_ID                   as formId
+		        , B.FORM_NAME                 as formName
+		        , B.JSON                      as json
+		        , B.JSCRIPT                   as jscript
+		        , 'TMPL_1000000003'           as formTmplId
+		        , '코드형템플릿'              as formTmplName
+		        , 'CODE'                       as formTmplType
+		        , '/template/templateC_01.jsp' as url
+		        , A.ROLE_SUPPORT              as roleSupport
+		        , A.ROLE_CHARGE               as roleCharge
+		        , A.ROLE_USER_USE_AT       	  as roleUserSearchAt
+		        , A.ROLE_SUPPORT_USE_AT       as roleSupportSearchAt
+		        , A.LINK_SERVICE_ID			  as linkServiceId
+		FROM  WF_SERVICE A
+		      , WM_FORMS B
+		WHERE A.COMPANY_CODE = B.COMPANY_CODE 
+		AND   A.FORM_ID = B.FORM_ID 
+		AND   A.COMPANY_CODE = 'H101'
+		AND   A.SERVICE_ID = #{serviceId}
+    </select>
+    
+    <select id="selectFormButtonList" resultType="com.example.restfulwebservice.builder.vo.FormButtonVO">
+  		SELECT  /* ServiceApproval_SQL.selectFormButtonList */
+                T1.COMPANY_CODE        as companyCode
+                , T1.FORM_ID           as formId
+                , T1.ROLE_ID           as roleId
+                , T1.BUTTON_CODE       as buttonCode
+                , T1.BUTTON_CODE       as buttonName
+                , T1.USE_AT            as useAt
+                , T1.CREATE_USER       as createUser
+                , T1.UPDATE_USER       as updateUser
+        FROM WM_FORM_BUTTON T1
+        WHERE   T1.USE_AT = 'Y'
+        AND     T1.COMPANY_CODE = #{companyCode} 
+        AND     T1.FORM_ID = #{formId} 
+        AND     T1.ROLE_ID = #{roleId}
+        AND     T1.USE_AT = 'Y'
+    </select>
+    
+    <select id="selectFormFieldList"  resultType="com.example.restfulwebservice.builder.vo.FormFieldVO">
+		SELECT  /* ServiceApproval_SQL.selectFormFieldList */
+                B.COMPANY_CODE          as companyCode
+				, B.FORM_ID             as formId
+				, B.FIELD_ID            as fieldId
+				, CASE WHEN #{languageCode} = 'en' THEN COALESCE(B.FIELD_NAME_ENG, B.FIELD_NAME) ELSE B.FIELD_NAME END AS fieldName
+				, B.FIELD_TYPE          as fieldType
+                , B.FIELD_LENGTH        as fieldLength
+                , B.FIELD_DEFAULT       as fieldDefault
+                , B.FIELD_NULLABLE_AT   as fieldNullableAt
+				, B.FIELD_PK_AT         as fieldPkAt
+				, B.FIELD_CAT           as fieldCat
+				, B.USE_AT			    as useAt
+				, B.SORT_ORDER          as sortOrder
+				, CASE WHEN COALESCE(B.SORT_ORDER, 0) = 0 THEN 'N' ELSE 'Y' END AS listDisplayAt
+				, B.FIELD_ID as elementId
+				, CASE WHEN #{languageCode} = 'en' THEN COALESCE(B.FIELD_NAME_ENG, B.FIELD_NAME) ELSE B.FIELD_NAME END AS attrLabel
+		FROM WM_FORMS A
+		    ,WM_FORM_FIELD B  
+		WHERE A.COMPANY_CODE = B.COMPANY_CODE 
+		AND A.FORM_ID = B.FORM_ID
+		AND A.FORM_ID = #{formId}
+		ORDER BY B.SORT_ORDER
+	</select>
+	
+    <select id="selectCodeTemplateDataList" resultType="java.util.HashMap">
+        SELECT  /* ServiceApproval_SQL.selectCodeTemplateDataList */
+            <foreach item="value" index="key" collection="columnNames.entrySet()" separator=",">
+            ${value}
+            </foreach>
+        FROM ${tableName}
+        WHERE 
+        <foreach item="item" index="index" collection="whereValues" >
+            <foreach item="value" index="key" collection="item.entrySet()" separator="and ">
+            ${key} like #{value}
+            </foreach>
+        </foreach>
+        <if test='columnValue != null and columnValue != "".toString()'>
+        	AND ${columnValue} between to_date(#{startYmd}||'000000', 'yyyymmddhh24miss') and to_date(#{endYmd}||'235959', 'yyyymmddhh24miss')
+        </if>
+    </select>
+    
+    <update id="insertCodeTemplateData" >
+        INSERT INTO /* ServiceApproval_SQL.insertCodeTemplateData */ 
+        	${tableName} (
+		        <foreach item="value" index="key" collection="columnNames.entrySet()" separator=",">
+		        ${key}
+		        </foreach>
+        )
+        VALUES (
+	        <foreach item="value" index="key" collection="columnValues.entrySet()" separator=",">
+	        <choose>
+	            <when test='value.toString() == "SYSDATE"'>
+	            SYSDATE
+	            </when>
+	            <otherwise>
+	            #{value}
+	            </otherwise> 
+	        </choose>
+	        </foreach>
+        )
+    </update>
+    
+    <update id="updateCodeTemplateData" >
+        UPDATE  /* ServiceApproval_SQL.updateCodeTemplateData */
+                ${tableName}
+        SET
+            <foreach item="value" index="key" collection="columnValues.entrySet()" separator=",">
+                <if test='key != "COMPANY_CODE" and key != "CREATE_TIME" and key != "CREATE_USER" '>
+                    <choose>
+                        <when test='value.toString() == "SYSDATE"'>
+                        ${key} = SYSDATE
+                        </when>
+                        <otherwise>
+                        ${key} = #{value}
+                        </otherwise> 
+                    </choose>
+                </if>
+            </foreach>
+        WHERE 
+	        <foreach item="item" index="index" collection="whereValues">
+	            <foreach item="value" index="key" collection="item.entrySet()" separator="and ">
+	            ${key} = #{value}
+	            </foreach>
+	        </foreach>
+    </update>
+    
+    <update id="deleteCodeTemplateData">
+        DELETE  /* ServiceApproval_SQL.deleteTemplateCodeData */
+        FROM 	${tableName} 
+        WHERE 
+	        <foreach item="item" index="index" collection="whereValues">
+	            <foreach item="value" index="key" collection="item.entrySet()" separator="and ">
+	            ${key} = #{value}
+	            </foreach>
+	        </foreach>
+    </update>
+</mapper>

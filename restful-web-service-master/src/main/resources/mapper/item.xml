@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.restfulwebservice.builder.dao.ItemDao" >
+	
+	<resultMap id="items" type="com.example.restfulwebservice.builder.vo.ItemTmplVO" autoMapping="true"></resultMap>
+    
+    <!-- item template all list -->
+    <select id="selectItemTmplAll"  resultMap="items">
+        SELECT /* Item_SQL.selectItemTmplAll */
+               ITEM_TMPL_ID AS itemTmplId,  
+               ITEM_TMPL_NAME AS itemTmplName,
+               ITEM_TYPE AS itemType,
+               HTML AS html,
+               JSON AS json,
+               USE_AT AS useAt    
+          FROM WM_ITEM_TMPL
+         WHERE 1 = 1
+           AND USE_AT = 'Y'
+           AND COMPANY_CODE = #{companyCode}
+         ORDER BY ITEM_TMPL_NAME
+    </select>
+    
+</mapper>

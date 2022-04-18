@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:batch="http://www.springframework.org/schema/batch" 
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.1.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+		http://www.springframework.org/schema/batch
+		http://www.springframework.org/schema/batch/spring-batch-2.2.xsd">
+	
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<context:annotation-config />
+	<context:component-scan base-package="com.hmc.quartz" />
+	
+	<!-- spring batch context -->
+	<bean id="jobRepository"
+		class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="databaseType" value="oracle" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="isolationLevelForCreate" value="ISOLATION_DEFAULT "></property>
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+    
+
+	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+       <property name="jobRepository" ref="jobRepository" />
+	</bean>
+	
+	<bean class="org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor">
+		<property name="jobRegistry" ref="jobRegistry" />
+	</bean>
+
+	<bean id="jobRegistry" class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
+    
+    <!-- ================================================================================ -->
+    <!-- 해외출장 접수대기 대상자 드림투어 API 호출 및 상태 변경 프로세스 시작 -->
+    <!-- ================================================================================ -->
+    <batch:job id="dreamTourStatusProcJobByRs">
+        <batch:step id="dreamTourStatusProcStep01">
+            <batch:tasklet transaction-manager="transactionManager">
+                <batch:listeners>
+                    <batch:listener ref="dreamTourStatusProcReader"/>
+                    <batch:listener ref="dreamTourStatusProcProcessor"/>
+                </batch:listeners>
+                <batch:chunk reader="dreamTourStatusProcReaderReaderAdaptor" writer="dreamTourStatusProcWriter" commit-interval="10000">
+                </batch:chunk>
+            </batch:tasklet>
+        </batch:step>
+    </batch:job>
+
+    <bean id="dreamTourStatusProcReaderReaderAdaptor" class="org.springframework.batch.item.adapter.ItemReaderAdapter">
+        <property name="targetObject" ref="dreamTourStatusProcReader" />
+        <property name="targetMethod" value="read" />
+    </bean>
+
+    <bean id="dreamTourStatusProcJdbcReader"
+        class="org.springframework.batch.item.database.JdbcCursorItemReader">
+        <property name="dataSource" ref="dataSource" />
+        <property name="sql">
+            <value>
+                <![CDATA[
+                    SELECT 
+                        DISTINCT AA.INTE_RESVE_NO AS inteResveNo
+                    FROM (  
+                        SELECT 
+                             A.*
+                            ,COUNT(A.INTE_RESVE_NO) OVER(PARTITION BY A.INTE_RESVE_NO) AS INTE_RESVE_CNT
+                        FROM H101_HC020_SR A
+                        WHERE STATUS_CODE = 'C'
+                    ) AA INNER JOIN (
+                                        SELECT 
+                                             INTE_RESVE_NO
+                                            ,COUNT(INTE_RESVE_NO) INTE_RESVE_CNT
+                                        FROM H101_HC020_SR
+                                        GROUP BY INTE_RESVE_NO) B 
+                         ON AA.INTE_RESVE_NO = B.INTE_RESVE_NO
+                         AND AA.INTE_RESVE_CNT = B.INTE_RESVE_CNT
+                ]]>
+            </value>
+        </property>
+        <property name="rowMapper" ref="dreamTourStatusProcMapper" />
+    </bean>
+    <bean id="dreamTourStatusProcWriter"
+        class="org.springframework.batch.item.adapter.ItemWriterAdapter">
+        <property name="targetObject" ref="dreamTourStatusProcProcessor" />
+        <property name="targetMethod" value="process" />
+    </bean>
+    <!-- ================================================================================ -->
+    <!-- 해외출장 접수대기 대상자 드림투어 API 호출 및 상태 변경 프로세스 종료 -->
+    <!-- ================================================================================ -->
+</beans>
