@@ -8,6 +8,7 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -33,8 +34,9 @@ public class SwaggerConfig {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(DEFAULT_API_INFO)
-                .produces(DEFAULT_PRODUCES_AND_CONSUMES)
-                .consumes(DEFAULT_PRODUCES_AND_CONSUMES);
+             //   .produces(DEFAULT_PRODUCES_AND_CONSUMES)
+             //   .consumes(DEFAULT_PRODUCES_AND_CONSUMES)
+                .ignoredParameterTypes(HttpSession.class);  // HttpSession 타입 제외
     }
 
 }

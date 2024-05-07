@@ -17,8 +17,8 @@ spring:
   mail:
     host: smtp.naver.com
     port: 587
-    username: 
-    password:
+    username: n_nv711@naver.com
+    password: tkfkdgkqslek1!@
   mvc: 
     view:
       suffix: .html
