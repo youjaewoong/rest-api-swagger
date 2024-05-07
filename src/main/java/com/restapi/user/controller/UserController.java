@@ -1,5 +1,8 @@
-package com.restapi.user;
+package com.restapi.user.controller;
 
+import com.restapi.user.UserNotFoundException;
+import com.restapi.user.dto.User;
+import com.restapi.user.service.UserDaoService;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;

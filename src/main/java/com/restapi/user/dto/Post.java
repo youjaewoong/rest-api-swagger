@@ -1,4 +1,4 @@
-package com.restapi.user;
+package com.restapi.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;

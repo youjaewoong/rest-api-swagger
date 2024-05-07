@@ -1,5 +1,10 @@
-package com.restapi.user;
+package com.restapi.user.controller;
 
+import com.restapi.user.*;
+import com.restapi.user.dto.Post;
+import com.restapi.user.dto.User;
+import com.restapi.user.repository.PostRepository;
+import com.restapi.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;

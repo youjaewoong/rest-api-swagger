@@ -1,5 +1,6 @@
-package com.restapi.user;
+package com.restapi.user.service;
 
+import com.restapi.user.dto.User;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
